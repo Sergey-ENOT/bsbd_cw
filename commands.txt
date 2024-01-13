@@ -1,0 +1,1 @@
+pyuic5.exe -x ../../interface/ui_files/authorization.ui -o ../../interface/py_files/authorization.py
