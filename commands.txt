@@ -1,1 +1,5 @@
 pyuic5.exe -x ../../interface/ui_files/authorization.ui -o ../../interface/py_files/authorization.py
+pyuic5.exe -x ../../interface/ui_files/admin_window.ui -o ../../interface/py_files/admin_window.py
+pyuic5.exe -x ../../interface/ui_files/doctor_window.ui -o ../../interface/py_files/doctor_window.py
+pyuic5.exe -x ../../interface/ui_files/patient_window.ui -o ../../interface/py_files/patient_window.py
+pyuic5.exe -x ../../interface/ui_files/see_edit_patient_data.ui -o ../../interface/py_files/see_edit_patient_data.py

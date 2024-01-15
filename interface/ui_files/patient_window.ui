@@ -14,7 +14,7 @@
    <string>Окно для работы пациента</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QPushButton" name="pushButton">
+   <widget class="QPushButton" name="pushButton_see_edit_data">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -53,7 +53,7 @@
      <string>Посмотреть приёмы</string>
     </property>
    </widget>
-   <widget class="QLabel" name="label">
+   <widget class="QLabel" name="label_welcome_p">
     <property name="geometry">
      <rect>
       <x>70</x>

@@ -1,6 +1,12 @@
-from PyQt5 import QtWidgets, QtCore
+import os
+
+from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QMessageBox
 from interface.py_files.authorization import Ui_auth_choose
+from work_admin import MWAdmin
+from work_doctor import MWDoctor
+from work_patient import MWPatient
+from db_connector import ConnectorDB
 import sys
 
 
@@ -11,6 +17,7 @@ class ChooseAuthWindow(QtWidgets.QMainWindow):
         self.ui.setupUi(self)
         self.add_clicked()
         self.messagebox = QMessageBox()
+        self.application = None
         self.selected_radio = ""
 
     def show_messagebox(self, level, title, text):
@@ -29,6 +36,7 @@ class ChooseAuthWindow(QtWidgets.QMainWindow):
         self.ui.rB_choose_doctor.toggled.connect(self.button_state)
         self.ui.rB_choose_patient.toggled.connect(self.button_state)
         self.ui.pB_execute_auth.clicked.connect(self.auth_func)
+        self.ui.rB_choose_admin.setChecked(True)
 
     def button_state(self):
         b = self.sender()
@@ -58,21 +66,58 @@ class ChooseAuthWindow(QtWidgets.QMainWindow):
             temp_var = 4
         self.selected_radio = temp_var
 
+    def check_fill(self):
+        f_arg = self.ui.lineEdit_f_arg.text().strip()
+        s_arg = self.ui.lineEdit_s_arg.text().strip()
+        if (len(f_arg) == 0) or (len(s_arg) == 0):
+            self.show_messagebox("warning", "Warning", "Обнаружены незаполненные поля\n"
+                                                       "либо содержатся только пробелы")
+            return False
+        return True
+
     def auth_func(self):
-        self.repaint()
         self.get_radio()
         c_r = self.selected_radio
-        if c_r != 4:
+        if self.check_fill():
+            f_arg = self.ui.lineEdit_f_arg.text()
+            s_arg = self.ui.lineEdit_s_arg.text()
             if c_r == 1 or c_r == 2:
-                pass
-        else:
-            self.show_messagebox("information", "Информационное сообщение", "Не выбрана роль перед авторизацией")
+                try:
+                    db_con = ConnectorDB("127.0.0.1", f_arg, s_arg)
+                    db_con.create_connection()
+                    db_con.close_connection()
+                    if c_r == 1:
+                        self.hide()
+                        self.application = MWAdmin()
+                        self.application.show()
+                    else:
+                        self.hide()
+                        self.application = MWDoctor()
+                        self.application.show()
+                except Exception as err:
+                    self.show_messagebox("warning", "Предупреждение", err)
+            else:
+                try:
+                    db_con = ConnectorDB("127.0.0.1", "patient_public", "12345678")
+                    db_con.create_connection()
+                    res_query = db_con.check_patient_data(f_arg, s_arg)
+                    db_con.close_connection()
+                    print(res_query)
+                    if res_query != -1:
+                        self.hide()
+                        self.application = MWPatient(res_query)
+                        self.application.show()
+                    else:
+                        self.show_messagebox("warning", "Предупреждение", "Неверные данные")
+                except Exception as err:
+                    self.show_messagebox("warning", "Предупреждение", err)
 
 
-app = QtWidgets.QApplication([])
-choose_auth = ChooseAuthWindow()
-choose_auth.show()
-sys.exit(app.exec())
+if __name__ == "__main__":
+    app = QtWidgets.QApplication([])
+    choose_auth = ChooseAuthWindow()
+    choose_auth.show()
+    sys.exit(app.exec())
 
 # test_var = ConnectorDB("127.0.0.1", "postgres", "admin123")
 # test_var.create_connection()
