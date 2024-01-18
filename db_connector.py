@@ -1,3 +1,4 @@
+from PyQt5.QtWidgets import QMessageBox
 import psycopg2
 from psycopg2 import Error
 
@@ -30,7 +31,7 @@ class ConnectorDB:
         except (Exception, Error) as ex:
             print("Connection refused...")
             print("Error(connection):", ex)
-            raise Exception
+            raise ex
 
     def check_patient_data(self, arg_policy, arg_date):
         self.cursor_db = self.connection_db.cursor()
@@ -45,20 +46,97 @@ class ConnectorDB:
             self.cursor_db = self.connection_db.cursor()
             self.cursor_db.execute(f"select * from func_select_patient_data({id_p})")
             received_data = self.cursor_db.fetchone()
-            self.cursor_db.close()
             return received_data
         except (Exception, Error) as err:
             print(err)
+            raise err
+        finally:
+            self.cursor_db.close()
+
+    def func_select_doctor_data(self, log_d):
+        try:
+            self.cursor_db = self.connection_db.cursor()
+            self.cursor_db.execute(f"select * from func_select_doctor_data('{log_d}')")
+            received_data = self.cursor_db.fetchone()
+            return received_data
+        except (Exception, Error) as err:
+            print(err)
+            raise err
+        finally:
+            self.cursor_db.close()
 
     def view_get_streets_title(self):
         try:
             self.cursor_db = self.connection_db.cursor()
             self.cursor_db.execute(f"select * from view_title_streets")
-            received_data = self.cursor_db.fetchall()
-            self.cursor_db.close()
+            received_data = [x[0] for x in self.cursor_db.fetchall()]
             return received_data
         except (Exception, Error) as err:
             print(err)
+            raise err
+        finally:
+            self.cursor_db.close()
+
+    def view_get_specializations(self):
+        try:
+            self.cursor_db = self.connection_db.cursor()
+            self.cursor_db.execute(f"select * from view_title_specializations")
+            received_data = [x[0] for x in self.cursor_db.fetchall()]
+            return received_data
+        except (Exception, Error) as err:
+            print(err)
+            raise err
+        finally:
+            self.cursor_db.close()
+
+    def proc_add_patient(self, surname, name, patr, gender, date, street, n_h, n_f, phone, ins_policy):
+        try:
+            self.cursor_db = self.connection_db.cursor()
+            self.cursor_db.execute(f"call proc_insert_patient('{surname}', '{name}', '{patr}', '{gender}', '{date}',"
+                                   f"'{street}', '{n_h}', '{n_f}', '{phone}', '{ins_policy}')")
+            self.connection_db.commit()
+        except (Exception, Error) as err:
+            print(err)
+            raise err
+        finally:
+            self.cursor_db.close()
+
+    def proc_update_patient(self, id_p, surname, name, patr, gender, street, n_h, n_f, phone):
+        try:
+            self.cursor_db = self.connection_db.cursor()
+            self.cursor_db.execute(f"call proc_update_patient('{id_p}', '{surname}', '{name}', '{patr}', '{gender}',"
+                                   f"'{street}', '{n_h}', '{n_f}', '{phone}')")
+            self.connection_db.commit()
+        except (Exception, Error) as err:
+            print(err)
+            raise err
+        finally:
+            self.cursor_db.close()
+
+    def proc_add_doctor(self, list_args):
+        try:
+            self.cursor_db = self.connection_db.cursor()
+            self.cursor_db.execute(f"call proc_insert_doctor('{list_args[0]}', '{list_args[1]}', '{list_args[2]}',"
+                                   f"'{list_args[3]}', '{list_args[4]}', '{list_args[5]}', '{list_args[6]}',"
+                                   f"'{list_args[7]}', '{list_args[8]}')")
+            self.connection_db.commit()
+        except (Exception, Error) as err:
+            print(err)
+            raise err
+        finally:
+            self.cursor_db.close()
+
+    def proc_update_doctor(self, list_args):
+        try:
+            self.cursor_db = self.connection_db.cursor()
+            self.cursor_db.execute(f"call proc_update_doctor('{list_args[0]}', '{list_args[1]}',"
+                                   f"'{list_args[2]}', '{list_args[3]}')")
+            self.connection_db.commit()
+        except (Exception, Error) as err:
+            print(err)
+            raise err
+        finally:
+            self.cursor_db.close()
 
     def close_connection(self):
         try:
@@ -66,6 +144,7 @@ class ConnectorDB:
             self.connection_db = None
         except (Exception, Error) as ex:
             print(ex)
+            raise ex
 
 
 if __name__ == "__main__":
@@ -75,6 +154,6 @@ if __name__ == "__main__":
         res_query = db_con.check_patient_data("1263000000000001", "1977-12-12")
         db_con.close_connection()
         print(res_query)
-
     except (Exception, Error) as error:
         print("Ошибка при работе с PostgreSQL", error)
+        raise error

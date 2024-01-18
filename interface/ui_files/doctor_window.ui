@@ -27,30 +27,43 @@
      <string>Начать приём</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_2">
-    <property name="geometry">
-     <rect>
-      <x>490</x>
-      <y>40</y>
-      <width>221</width>
-      <height>71</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>???Удалить неиспользованные талоны???</string>
-    </property>
-   </widget>
    <widget class="QPushButton" name="pushButton_3">
     <property name="geometry">
      <rect>
-      <x>50</x>
-      <y>140</y>
+      <x>40</x>
+      <y>160</y>
       <width>151</width>
       <height>61</height>
      </rect>
     </property>
     <property name="text">
      <string>Посмотреть мой участок</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_2">
+    <property name="geometry">
+     <rect>
+      <x>260</x>
+      <y>50</y>
+      <width>161</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>редактировать приём</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_4">
+    <property name="geometry">
+     <rect>
+      <x>260</x>
+      <y>160</y>
+      <width>371</width>
+      <height>71</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>посмотреть историю приёмов пациента у специалиста</string>
     </property>
    </widget>
   </widget>
@@ -60,7 +73,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>21</height>
+     <height>26</height>
     </rect>
    </property>
   </widget>

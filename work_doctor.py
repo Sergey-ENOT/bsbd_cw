@@ -6,10 +6,12 @@ import sys
 
 
 class MWDoctor(QtWidgets.QMainWindow):
-    def __init__(self):
+    def __init__(self, log_str, pas_str):
         super(MWDoctor, self).__init__()
         self.ui = Ui_MW_doctor()
         self.ui.setupUi(self)
+        self.log_str = log_str
+        self.pas_str = pas_str
         self.messagebox = QMessageBox()
 
     def show_messagebox(self, level, title, text):

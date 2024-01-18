@@ -88,14 +88,15 @@ class ChooseAuthWindow(QtWidgets.QMainWindow):
                     db_con.close_connection()
                     if c_r == 1:
                         self.hide()
-                        self.application = MWAdmin()
+                        self.application = MWAdmin(f_arg, s_arg)
                         self.application.show()
                     else:
                         self.hide()
-                        self.application = MWDoctor()
+                        self.application = MWDoctor(f_arg, s_arg)
                         self.application.show()
                 except Exception as err:
-                    self.show_messagebox("warning", "Предупреждение", err)
+                    print(err)
+                    self.show_messagebox("warning", "Предупреждение", str(err))
             else:
                 try:
                     db_con = ConnectorDB("127.0.0.1", "patient_public", "12345678")
@@ -110,7 +111,7 @@ class ChooseAuthWindow(QtWidgets.QMainWindow):
                     else:
                         self.show_messagebox("warning", "Предупреждение", "Неверные данные")
                 except Exception as err:
-                    self.show_messagebox("warning", "Предупреждение", err)
+                    self.show_messagebox("warning", "Предупреждение", str(err))
 
 
 if __name__ == "__main__":
