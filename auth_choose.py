@@ -103,7 +103,6 @@ class ChooseAuthWindow(QtWidgets.QMainWindow):
                     db_con.create_connection()
                     res_query = db_con.check_patient_data(f_arg, s_arg)
                     db_con.close_connection()
-                    print(res_query)
                     if res_query != -1:
                         self.hide()
                         self.application = MWPatient(res_query)

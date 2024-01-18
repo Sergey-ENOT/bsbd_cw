@@ -138,6 +138,30 @@ class ConnectorDB:
         finally:
             self.cursor_db.close()
 
+    def func_get_area(self, id_p):
+        try:
+            self.cursor_db = self.connection_db.cursor()
+            self.cursor_db.execute(f"select * from func_get_patient_area('{id_p}')")
+            res_query_f = self.cursor_db.fetchone()
+            return res_query_f[0]
+        except (Exception, Error) as err:
+            print(err)
+            raise err
+        finally:
+            self.cursor_db.close()
+
+    def func_get_tickets(self, id_p, spec_d):
+        try:
+            self.cursor_db = self.connection_db.cursor()
+            self.cursor_db.execute(f"select * from func_select_tickets('{id_p}', '{spec_d}')")
+            res_query_f = self.cursor_db.fetchall()
+            return res_query_f
+        except (Exception, Error) as err:
+            print(err)
+            raise err
+        finally:
+            self.cursor_db.close()
+
     def close_connection(self):
         try:
             self.connection_db.close()
