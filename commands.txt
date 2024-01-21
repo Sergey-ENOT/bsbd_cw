@@ -8,3 +8,6 @@ pyuic5.exe -x ../../interface/ui_files/add_patient_data.ui -o ../../interface/py
 pyuic5.exe -x ../../interface/ui_files/add_doctor_data.ui -o ../../interface/py_files/add_doctor_data.py
 pyuic5.exe -x ../../interface/ui_files/edit_doctor_data.ui -o ../../interface/py_files/edit_doctor_data.py
 pyuic5.exe -x ../../interface/ui_files/patient_take_ticket.ui -o ../../interface/py_files/patient_take_ticket.py
+pyuic5.exe -x ../../interface/ui_files/patient_taken_tickets.ui -o ../../interface/py_files/patient_taken_tickets.py
+pyuic5.exe -x ../../interface/ui_files/start_reception.ui -o ../../interface/py_files/start_reception.py
+pyuic5.exe -x ../../interface/ui_files/history_receptions.ui -o ../../interface/py_files/history_receptions.py

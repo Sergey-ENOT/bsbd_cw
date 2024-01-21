@@ -4,8 +4,48 @@ from interface.py_files.patient_window import Ui_MW_patient
 from db_connector import ConnectorDB
 from interface.py_files.see_patient_data import Ui_Form_see_patient_data
 from interface.py_files.patient_take_ticket import Ui_Form_patient_take_ticket
+from interface.py_files.patient_taken_tickets import Ui_Form_patient_taken_tickets
+from interface.py_files.history_receptions import Ui_Form_history_receptions
 import sys
 import datetime
+
+
+class FormHistoryReceptions(QtWidgets.QWidget):
+    def __init__(self):
+        super(FormHistoryReceptions, self).__init__()
+        self.ui = Ui_Form_history_receptions()
+        self.list_column_name = ["Номер талона", "Специальность", "Фамилия", "Имя",
+                                 "Дата приема", "Время приема", "Жалобы", "Диагноз", "Лечение"]
+        self.ui.setupUi(self)
+        self.update_ui()
+
+    def update_ui(self):
+        self.ui.tableWidget_h_r.setColumnCount(len(self.list_column_name))
+        self.ui.tableWidget_h_r.setHorizontalHeaderLabels(self.list_column_name)
+
+    def clean_table(self):
+        self.ui.tableWidget_h_r.setRowCount(0)
+
+    def display_table(self, list_args):
+        self.clean_table()
+        numrows = len(list_args)
+        numcolumns = len(self.list_column_name)
+        self.ui.tableWidget_h_r.setRowCount(numrows)
+        for row in range(numrows):
+            for column in range(numcolumns):
+                # Check if value datetime, if True convert to string
+                if isinstance(list_args[row][column], datetime.date):
+                    self.ui.tableWidget_h_r.setItem(row, column, QtWidgets.QTableWidgetItem(
+                        (list_args[row][column].strftime('%d.%m.%Y'))))
+                elif isinstance(list_args[row][column], datetime.time):
+                    self.ui.tableWidget_h_r.setItem(row, column, QtWidgets.QTableWidgetItem(
+                        (list_args[row][column].strftime('%H:%M'))))
+                elif isinstance(list_args[row][column], int):
+                    self.ui.tableWidget_h_r.setItem(row, column,
+                                                    QtWidgets.QTableWidgetItem((str(list_args[row][column]))))
+                else:
+                    self.ui.tableWidget_h_r.setItem(row, column,
+                                                    QtWidgets.QTableWidgetItem((list_args[row][column])))
 
 
 class FormSeePatientData(QtWidgets.QWidget):
@@ -45,12 +85,18 @@ class FormTakeTicket(QtWidgets.QWidget):
         self.ui.setupUi(self)
         self.db_con = connect
         self.id_p = id_p
-        self.allow_take = False
+        self.list_column_name = ["Номер талона", "Фамилия", "Имя", "Дата приема", "Время приема", "Кабинет"]
         self.messagebox = QMessageBox()
+        self.update_ui()
         self.connect_buttons()
+
+    def update_ui(self):
+        self.ui.tableWidget_ticket.setColumnCount(len(self.list_column_name))
+        self.ui.tableWidget_ticket.setHorizontalHeaderLabels(self.list_column_name)
 
     def connect_buttons(self):
         self.ui.pushButton_confirm.clicked.connect(self.select_tickets)
+        self.ui.pushButton_take_ticket.clicked.connect(self.take_ticket)
 
     def show_messagebox(self, level, title, text):
         if level == "critical":
@@ -75,14 +121,13 @@ class FormTakeTicket(QtWidgets.QWidget):
         except Exception as err:
             self.show_messagebox("critical", "Error", str(err))
 
+    def clean_table(self):
+        self.ui.tableWidget_ticket.setRowCount(0)
+
     def display_table(self, list_args):
-        for i in range(self.ui.tableWidget_ticket.rowCount()):
-            self.ui.tableWidget_ticket.removeColumn(i)
-        list_column_name = ["Номер талона", "Фамилия", "Имя", "Дата приема", "Время приема", "Кабинет"]
+        self.clean_table()
         numrows = len(list_args)
-        numcolumns = len(list_column_name)
-        self.ui.tableWidget_ticket.setColumnCount(numcolumns)
-        self.ui.tableWidget_ticket.setHorizontalHeaderLabels(list_column_name)
+        numcolumns = len(self.list_column_name)
         self.ui.tableWidget_ticket.setRowCount(numrows)
         for row in range(numrows):
             for column in range(numcolumns):
@@ -100,6 +145,67 @@ class FormTakeTicket(QtWidgets.QWidget):
                     self.ui.tableWidget_ticket.setItem(row, column,
                                                        QtWidgets.QTableWidgetItem((list_args[row][column])))
 
+    def take_ticket(self):
+        c_r = self.ui.tableWidget_ticket.currentRow()
+        if c_r == -1:
+            self.show_messagebox("information", "Information", "Необходимо выбрать талон")
+        else:
+            spec_d = self.ui.comboBox_choose_spec_d.currentText()
+            surname_d = self.ui.tableWidget_ticket.item(c_r, 1).text()
+            date_rec = self.ui.tableWidget_ticket.item(c_r, 3).text()
+            time_rec = self.ui.tableWidget_ticket.item(c_r, 4).text()
+            button = QMessageBox.question(QtWidgets.QWidget(),
+                                          "Подтверждение записи",
+                                          f"Специальность: {spec_d}\nФамилия врача: {surname_d}\n"
+                                          f"Дата приема: {date_rec}\nВремя приема: {time_rec}")
+            if button == QMessageBox.Yes:
+                try:
+                    self.db_con.create_connection()
+                    self.db_con.proc_update_ticket(self.id_p, self.ui.tableWidget_ticket.item(c_r, 0).text())
+                    self.db_con.close_connection()
+                    self.show_messagebox("information", "Information", "Запись на прием выполнена")
+                    self.clean_table()
+                except Exception as err:
+                    self.show_messagebox("critical", "Error", str(err))
+
+
+class FormTakenTickets(QtWidgets.QWidget):
+    def __init__(self):
+        super(FormTakenTickets, self).__init__()
+        self.ui = Ui_Form_patient_taken_tickets()
+        self.ui.setupUi(self)
+        self.list_column_name = ["Номер талона", "Специальность", "Фамилия", "Имя",
+                                 "Дата приема", "Время приема", "Кабинет"]
+        self.update_ui()
+
+    def update_ui(self):
+        self.ui.tableWidget_taken_tickets.setColumnCount(len(self.list_column_name))
+        self.ui.tableWidget_taken_tickets.setHorizontalHeaderLabels(self.list_column_name)
+
+    def display_table(self, list_args):
+        self.clean_table()
+        numrows = len(list_args)
+        numcolumns = len(self.list_column_name)
+        self.ui.tableWidget_taken_tickets.setRowCount(numrows)
+        for row in range(numrows):
+            for column in range(numcolumns):
+                # Check if value datetime, if True convert to string
+                if isinstance(list_args[row][column], datetime.date):
+                    self.ui.tableWidget_taken_tickets.setItem(row, column, QtWidgets.QTableWidgetItem(
+                        (list_args[row][column].strftime('%d.%m.%Y'))))
+                elif isinstance(list_args[row][column], datetime.time):
+                    self.ui.tableWidget_taken_tickets.setItem(row, column, QtWidgets.QTableWidgetItem(
+                        (list_args[row][column].strftime('%H:%M'))))
+                elif isinstance(list_args[row][column], int):
+                    self.ui.tableWidget_taken_tickets.setItem(row, column,
+                                                              QtWidgets.QTableWidgetItem((str(list_args[row][column]))))
+                else:
+                    self.ui.tableWidget_taken_tickets.setItem(row, column,
+                                                              QtWidgets.QTableWidgetItem((list_args[row][column])))
+
+    def clean_table(self):
+        self.ui.tableWidget_taken_tickets.setRowCount(0)
+
 
 class MWPatient(QtWidgets.QMainWindow):
     def __init__(self, input_id):
@@ -113,6 +219,8 @@ class MWPatient(QtWidgets.QMainWindow):
         self.update_ui()
         self.see_edit_win = FormSeePatientData()
         self.take_ticket_win = FormTakeTicket(self.db_con, self.id_patient)
+        self.taken_tickets_win = FormTakenTickets()
+        self.h_r_win = FormHistoryReceptions()
         self.surname = ""
         self.name = ""
         self.patronymic = ""
@@ -135,6 +243,8 @@ class MWPatient(QtWidgets.QMainWindow):
         self.ui.pushButton_see_edit_data.clicked.connect(self.see_edit_data)
         self.ui.pushButton_get_area.clicked.connect(self.show_area)
         self.ui.pushButton_book_ticket.clicked.connect(self.take_ticket)
+        self.ui.pushButton_get_taken_tickets.clicked.connect(self.get_taken_tickets)
+        self.ui.pushButton_get_receptions.clicked.connect(self.get_receptions)
 
     def show_messagebox(self, level, title, text):
         if level == "critical":
@@ -196,7 +306,28 @@ class MWPatient(QtWidgets.QMainWindow):
         self.show_messagebox("information", "Информационное сообщение", f"Ваш участок: {self.area}")
 
     def take_ticket(self):
+        self.take_ticket_win.clean_table()
         self.take_ticket_win.show()
+
+    def get_taken_tickets(self):
+        try:
+            self.db_con.create_connection()
+            list_tickets = self.db_con.func_select_taken_tickets(self.id_patient)
+            self.db_con.close_connection()
+            self.taken_tickets_win.display_table(list_tickets)
+            self.taken_tickets_win.show()
+        except Exception as err:
+            self.show_messagebox("Critical", "Error", str(err))
+
+    def get_receptions(self):
+        try:
+            self.db_con.create_connection()
+            list_tickets = self.db_con.func_select_reception(self.id_patient)
+            self.db_con.close_connection()
+            self.h_r_win.display_table(list_tickets)
+            self.h_r_win.show()
+        except Exception as err:
+            self.show_messagebox("Critical", "Error", str(err))
 
 
 if __name__ == "__main__":

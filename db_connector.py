@@ -22,16 +22,10 @@ class ConnectorDB:
                 password=self.password,
                 database=self.db_name,
             )
-            # db_cursor = self.connection_db.cursor()
-            # #db_cursor.execute("call proc_start_reception('2024/01/07', '23:00:00');")
-            # db_cursor.execute("select * from pg_roles;")
-            # #print("cursor:", db_cursor.description)    # todo check fetch cursor for 'None' or no
-            # print("Roles: ", db_cursor.fetchall(), "\n")
-            # db_cursor.close()
         except (Exception, Error) as ex:
             print("Connection refused...")
             print("Error(connection):", ex)
-            raise ex
+            raise Exception("Ошибка при подключении. Проверьте данные")
 
     def check_patient_data(self, arg_policy, arg_date):
         self.cursor_db = self.connection_db.cursor()
@@ -155,6 +149,77 @@ class ConnectorDB:
             self.cursor_db = self.connection_db.cursor()
             self.cursor_db.execute(f"select * from func_select_tickets('{id_p}', '{spec_d}')")
             res_query_f = self.cursor_db.fetchall()
+            return res_query_f
+        except (Exception, Error) as err:
+            print(err)
+            raise err
+        finally:
+            self.cursor_db.close()
+
+    def proc_update_ticket(self, id_p, id_t):
+        try:
+            self.cursor_db = self.connection_db.cursor()
+            self.cursor_db.execute(f"call proc_update_ticket('{id_p}', '{id_t}')")
+            self.connection_db.commit()
+        except (Exception, Error) as err:
+            print(err)
+            raise err
+        finally:
+            self.cursor_db.close()
+
+    def func_select_taken_tickets(self, id_p):
+        try:
+            self.cursor_db = self.connection_db.cursor()
+            self.cursor_db.execute(f"select * from func_select_taken_tickets('{id_p}')")
+            res_query_f = self.cursor_db.fetchall()
+            return res_query_f
+        except (Exception, Error) as err:
+            print(err)
+            raise err
+        finally:
+            self.cursor_db.close()
+
+    def func_get_ticket_data(self, id_t):
+        try:
+            self.cursor_db = self.connection_db.cursor()
+            self.cursor_db.execute(f"select * from func_get_ticket_data('{id_t}')")
+            res_query_f = self.cursor_db.fetchone()
+            return res_query_f
+        except (Exception, Error) as err:
+            print(err)
+            raise err
+        finally:
+            self.cursor_db.close()
+
+    def proc_record_reception(self, list_args):
+        try:
+            self.cursor_db = self.connection_db.cursor()
+            self.cursor_db.execute(f"call proc_record_reception('{list_args[0]}',"
+                                   f"'{list_args[1]}', '{list_args[2]}', '{list_args[3]}')")
+            self.connection_db.commit()
+        except psycopg2.DatabaseError as err:
+            print(err)
+            raise Exception("Данный талон не был использован. Нельзя создать прием")
+        finally:
+            self.cursor_db.close()
+
+    def func_select_reception(self, id_v, id_spec=0):
+        try:
+            self.cursor_db = self.connection_db.cursor()
+            self.cursor_db.execute(f"select * from func_select_receptions('{id_v}','{id_spec}')")
+            res_f = self.cursor_db.fetchall()
+            return res_f
+        except Exception as err:
+            print(err)
+            raise err
+        finally:
+            self.cursor_db.close()
+
+    def func_get_doctor_data(self, log_d):
+        try:
+            self.cursor_db = self.connection_db.cursor()
+            self.cursor_db.execute(f"select * from func_get_doctor_data('{log_d}')")
+            res_query_f = self.cursor_db.fetchone()
             return res_query_f
         except (Exception, Error) as err:
             print(err)

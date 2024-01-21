@@ -118,7 +118,3 @@ if __name__ == "__main__":
     choose_auth = ChooseAuthWindow()
     choose_auth.show()
     sys.exit(app.exec())
-
-# test_var = ConnectorDB("127.0.0.1", "postgres", "admin123")
-# test_var.create_connection()
-# test_var.close_connection()
