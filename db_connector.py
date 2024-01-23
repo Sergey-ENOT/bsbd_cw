@@ -1,4 +1,3 @@
-from PyQt5.QtWidgets import QMessageBox
 import psycopg2
 from psycopg2 import Error
 
@@ -203,10 +202,11 @@ class ConnectorDB:
         finally:
             self.cursor_db.close()
 
-    def func_select_reception(self, id_v, id_spec=0):
+    def func_select_reception(self, arg_id, spec_d, d_s, d_e, mode_f):
         try:
             self.cursor_db = self.connection_db.cursor()
-            self.cursor_db.execute(f"select * from func_select_receptions('{id_v}','{id_spec}')")
+            self.cursor_db.execute(f"select * from func_select_receptions('{arg_id}','{spec_d}', '{d_s}',"
+                                   f"'{d_e}', '{mode_f}')")
             res_f = self.cursor_db.fetchall()
             return res_f
         except Exception as err:
@@ -237,12 +237,4 @@ class ConnectorDB:
 
 
 if __name__ == "__main__":
-    try:
-        db_con = ConnectorDB("127.0.0.1", "patient_public", "12345678")
-        db_con.create_connection()
-        res_query = db_con.check_patient_data("1263000000000001", "1977-12-12")
-        db_con.close_connection()
-        print(res_query)
-    except (Exception, Error) as error:
-        print("Ошибка при работе с PostgreSQL", error)
-        raise error
+    pass

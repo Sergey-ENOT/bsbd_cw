@@ -10,17 +10,40 @@ import sys
 
 
 class FormHistoryReceptions(QtWidgets.QWidget):
-    def __init__(self):
+    def __init__(self, connect):
         super(FormHistoryReceptions, self).__init__()
         self.ui = Ui_Form_history_receptions()
+        self.ui.setupUi(self)
+        self.db_con = connect
+        self.id_t = ""
         self.list_column_name = ["Номер талона", "Специальность", "Фамилия", "Имя",
                                  "Дата приема", "Время приема", "Жалобы", "Диагноз", "Лечение"]
-        self.ui.setupUi(self)
+        self.ui.pushButton_select_history.clicked.connect(self.get_receptions)
+        self.messagebox = QMessageBox()
         self.update_ui()
 
     def update_ui(self):
         self.ui.tableWidget_h_r.setColumnCount(len(self.list_column_name))
         self.ui.tableWidget_h_r.setHorizontalHeaderLabels(self.list_column_name)
+        self.db_con.create_connection()
+        res_spec = self.db_con.view_get_specializations()
+        self.db_con.close_connection()
+        self.ui.comboBox_spec_d.addItems(res_spec)
+
+    def set_data(self, id_t):
+        self.id_t = id_t
+        print(self.id_t)
+
+    def show_messagebox(self, level, title, text):
+        if level == "critical":
+            self.messagebox.setIcon(QMessageBox.Critical)
+        elif level == "warning":
+            self.messagebox.setIcon(QMessageBox.Warning)
+        elif level == "information":
+            self.messagebox.setIcon(QMessageBox.Information)
+        self.messagebox.setWindowTitle(title)
+        self.messagebox.setText(text)
+        self.messagebox.exec()
 
     def clean_table(self):
         self.ui.tableWidget_h_r.setRowCount(0)
@@ -46,6 +69,19 @@ class FormHistoryReceptions(QtWidgets.QWidget):
                     self.ui.tableWidget_h_r.setItem(row, column,
                                                     QtWidgets.QTableWidgetItem((list_args[row][column])))
 
+    def get_receptions(self):
+        try:
+            self.db_con.create_connection()
+            list_tickets = self.db_con.func_select_reception(self.id_t,
+                                                             self.ui.comboBox_spec_d.currentText(),
+                                                             self.ui.dateEdit_start_date.date().toPyDate(),
+                                                             self.ui.dateEdit_end_date.date().toPyDate(),
+                                                             1)
+            self.db_con.close_connection()
+            self.display_table(list_tickets)
+        except Exception as err:
+            self.show_messagebox("critical", "Error", str(err))
+
 
 class FormStartReception(QtWidgets.QWidget):
     def __init__(self, connect, id_spec):
@@ -55,7 +91,7 @@ class FormStartReception(QtWidgets.QWidget):
         self.db_con = connect
         self.allow_rec = False
         self.spec_id = id_spec
-        self.h_r_win = FormHistoryReceptions()
+        self.h_r_win = FormHistoryReceptions(self.db_con)
         self.messagebox = QMessageBox()
         self.connect_buttons()
 
@@ -130,16 +166,13 @@ class FormStartReception(QtWidgets.QWidget):
             list_args = [self.ui.lineEdit_enter_n_t.text().strip()]
             if check_empty(list_args):
                 try:
-                    self.db_con.create_connection()
-                    res_f = self.db_con.func_select_reception(self.ui.lineEdit_enter_n_t.text(), self.spec_id)
-                    self.db_con.close_connection()
+                    self.h_r_win.set_data(self.ui.lineEdit_enter_n_t.text().strip())
                     self.h_r_win.show()
-                    self.h_r_win.display_table(res_f)
                 except Exception as err:
                     print(err)
                     self.show_messagebox("critical", "Error", str(err))
             else:
-                self.show_messagebox("warning", "Error", "Обнаружены пустые поля")
+                self.show_messagebox("warning", "Error", "Пустое поле с номером талона")
         else:
             self.show_messagebox("warning", "Error", "Сначала нужно выполнить\nпоиск талона")
 

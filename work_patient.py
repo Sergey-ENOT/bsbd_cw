@@ -11,17 +11,32 @@ import datetime
 
 
 class FormHistoryReceptions(QtWidgets.QWidget):
-    def __init__(self):
+    def __init__(self, connect, id_p):
         super(FormHistoryReceptions, self).__init__()
         self.ui = Ui_Form_history_receptions()
+        self.ui.setupUi(self)
+        self.db_con = connect
         self.list_column_name = ["Номер талона", "Специальность", "Фамилия", "Имя",
                                  "Дата приема", "Время приема", "Жалобы", "Диагноз", "Лечение"]
-        self.ui.setupUi(self)
+        self.ui.pushButton_select_history.clicked.connect(self.get_receptions)
+        self.messagebox = QMessageBox()
+        self.id_p = id_p
         self.update_ui()
 
     def update_ui(self):
         self.ui.tableWidget_h_r.setColumnCount(len(self.list_column_name))
         self.ui.tableWidget_h_r.setHorizontalHeaderLabels(self.list_column_name)
+
+    def show_messagebox(self, level, title, text):
+        if level == "critical":
+            self.messagebox.setIcon(QMessageBox.Critical)
+        elif level == "warning":
+            self.messagebox.setIcon(QMessageBox.Warning)
+        elif level == "information":
+            self.messagebox.setIcon(QMessageBox.Information)
+        self.messagebox.setWindowTitle(title)
+        self.messagebox.setText(text)
+        self.messagebox.exec()
 
     def clean_table(self):
         self.ui.tableWidget_h_r.setRowCount(0)
@@ -46,6 +61,19 @@ class FormHistoryReceptions(QtWidgets.QWidget):
                 else:
                     self.ui.tableWidget_h_r.setItem(row, column,
                                                     QtWidgets.QTableWidgetItem((list_args[row][column])))
+
+    def get_receptions(self):
+        try:
+            self.db_con.create_connection()
+            list_tickets = self.db_con.func_select_reception(self.id_p,
+                                                             self.ui.comboBox_spec_d.currentText(),
+                                                             self.ui.dateEdit_start_date.date().toPyDate(),
+                                                             self.ui.dateEdit_end_date.date().toPyDate(),
+                                                             0)
+            self.db_con.close_connection()
+            self.display_table(list_tickets)
+        except Exception as err:
+            self.show_messagebox("critical", "Error", str(err))
 
 
 class FormSeePatientData(QtWidgets.QWidget):
@@ -220,7 +248,7 @@ class MWPatient(QtWidgets.QMainWindow):
         self.see_edit_win = FormSeePatientData()
         self.take_ticket_win = FormTakeTicket(self.db_con, self.id_patient)
         self.taken_tickets_win = FormTakenTickets()
-        self.h_r_win = FormHistoryReceptions()
+        self.h_r_win = FormHistoryReceptions(self.db_con, self.id_patient)
         self.surname = ""
         self.name = ""
         self.patronymic = ""
@@ -263,6 +291,7 @@ class MWPatient(QtWidgets.QMainWindow):
             list_spec = self.db_con.view_get_specializations()
             self.db_con.close_connection()
             self.take_ticket_win.add_items_combo(list_spec)
+            self.h_r_win.ui.comboBox_spec_d.addItems(list_spec)
         except Exception as err:
             self.show_messagebox("Critical", "Error", str(err))
 
@@ -321,10 +350,6 @@ class MWPatient(QtWidgets.QMainWindow):
 
     def get_receptions(self):
         try:
-            self.db_con.create_connection()
-            list_tickets = self.db_con.func_select_reception(self.id_patient)
-            self.db_con.close_connection()
-            self.h_r_win.display_table(list_tickets)
             self.h_r_win.show()
         except Exception as err:
             self.show_messagebox("Critical", "Error", str(err))
